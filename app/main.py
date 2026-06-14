@@ -6,20 +6,48 @@ from app.schemas import CodeRequest
 from app.ocr import (
     extract_code_from_image
 )
+import ast
+from app.ai_analyzer import (
+    analyze_code_with_ai
+)
 
-def analyze_source_code(code: str):
 
-    metrics = extract_metrics(code)
+def analyze_source_code(
+    code: str
+):
 
-    result = predict_defect(metrics)
+    metrics = extract_metrics(
+        code
+    )
+
+    result = predict_defect(
+        metrics
+    )
+
+    ai_review = analyze_code_with_ai(
+        code=code,
+        metrics=metrics,
+        prediction=result["prediction"],
+        probability=result["probability"]
+    )
 
     return {
-        "prediction": result["prediction"],
-        "probability": result["probability"],
-        "risk_level": result["risk_level"],
-        "metrics": metrics
-    }
 
+        "prediction":
+            result["prediction"],
+
+        "probability":
+            result["probability"],
+
+        "risk_level":
+            result["risk_level"],
+
+        "metrics":
+            metrics,
+
+        "ai_review":
+            ai_review
+    }
 
 app = FastAPI(
     title="Software Defect Prediction API"
@@ -122,8 +150,10 @@ async def analyze_code(
             detail=f"Invalid Python syntax: {e}"
         )
 
-@app.post("/analyze-image")
-async def analyze_image(
+@app.post(
+    "/extract-code-from-image"
+)
+async def extract_code_endpoint(
     file: UploadFile = File(...)
 ):
 
@@ -131,17 +161,15 @@ async def analyze_image(
 
         image_bytes = await file.read()
 
-        code = extract_code_from_image(
-            image_bytes
-        )
-
-        result = analyze_source_code(
-            code
+        extracted_code = (
+            extract_code_from_image(
+                image_bytes
+            )
         )
 
         return {
-            "extracted_code": code,
-            **result
+            "extracted_code":
+                extracted_code
         }
 
     except Exception as e:
@@ -150,3 +178,30 @@ async def analyze_image(
             status_code=400,
             detail=str(e)
         )
+
+
+
+@app.post(
+    "/validate-code"
+)
+async def validate_code(
+    request: CodeRequest
+):
+
+    try:
+
+        ast.parse(
+            request.code
+        )
+
+        return {
+            "valid": True
+        }
+
+    except SyntaxError as e:
+
+        return {
+            "valid": False,
+            "error":
+                f"Line {e.lineno}: {e.msg}"
+        }
