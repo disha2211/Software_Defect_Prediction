@@ -15,6 +15,29 @@ def root():
         "Software Defect Prediction API Running"
     }
 
+#-------------creating a model info endpoint
+@app.get("/model-info")
+def model_info():
+
+    return {
+        "model": "XGBoost",
+        "version": "2.0",
+        "supported_files": [".py"],
+        "features": [
+            "LOC_TOTAL",
+            "LOC_EXECUTABLE",
+            "LOC_BLANK",
+            "LOC_COMMENTS",
+            "CYCLOMATIC_COMPLEXITY",
+            "HALSTEAD_LENGTH",
+            "HALSTEAD_VOLUME",
+            "HALSTEAD_DIFFICULTY",
+            "HALSTEAD_EFFORT",
+            "HALSTEAD_PROG_TIME",
+            "HALSTEAD_ERROR_EST"
+        ]
+    }
+
 
 #--------upload endpoint
 @app.post("/analyze-file")
