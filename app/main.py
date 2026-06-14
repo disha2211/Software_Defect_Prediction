@@ -44,47 +44,51 @@ def model_info():
 async def analyze_file(
     file: UploadFile = File(...)
 ):
+
     if not file.filename.endswith(".py"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only Python files are supported."
+        )
+
+    try:
+
+        # Read file
+        content = await file.read()
+
+        code = content.decode("utf-8")
+
+        # Extract Metrics
+        metrics = extract_metrics(code)
+
+        # Predict
+        result = predict_defect(metrics)
+
+        return {
+            "filename": file.filename,
+            "prediction": result["prediction"],
+            "probability": result["probability"],
+            "risk_level": result["risk_level"],
+            "metrics": metrics
+        }
+
+    except SyntaxError as e:
 
         raise HTTPException(
             status_code=400,
-            detail=
-            "Only Python files are supported."
+            detail=f"Invalid Python syntax: {e}"
         )
-    #----------Read Content
-    content = await file.read()
 
-    code = content.decode(
-        "utf-8"
-    )
+    except UnicodeDecodeError:
 
-    #-------------Extract Metrics
-    metrics = extract_metrics(
-        code
-    )
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to decode uploaded file."
+        )
 
-    #-------Predict
-    result = predict_defect(
-        metrics
-    )
+    except Exception as e:
 
-    #---------Return Everything
-    return {
-
-        "filename":
-            file.filename,
-
-        "prediction":
-            result["prediction"],
-
-        "probability":
-            result["probability"],
-
-        "risk_level": result["risk_level"],
-
-        "metrics":
-            metrics
-    }
-
-
-
+        raise HTTPException(
+            status_code=500,
+            detail=f"Unexpected error: {str(e)}"
+        )
