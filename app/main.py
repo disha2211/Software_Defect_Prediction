@@ -3,6 +3,9 @@ from app.metric_extractor  import extract_metrics
 from app.schemas import  SoftwareMetrics
 from app.predict  import predict_defect
 from app.schemas import CodeRequest
+from app.ocr import (
+    extract_code_from_image
+)
 
 def analyze_source_code(code: str):
 
@@ -117,4 +120,33 @@ async def analyze_code(
         raise HTTPException(
             status_code=400,
             detail=f"Invalid Python syntax: {e}"
+        )
+
+@app.post("/analyze-image")
+async def analyze_image(
+    file: UploadFile = File(...)
+):
+
+    try:
+
+        image_bytes = await file.read()
+
+        code = extract_code_from_image(
+            image_bytes
+        )
+
+        result = analyze_source_code(
+            code
+        )
+
+        return {
+            "extracted_code": code,
+            **result
+        }
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
         )
