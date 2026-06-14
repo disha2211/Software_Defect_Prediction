@@ -48,4 +48,6 @@ def extract_metrics(code: str):
             halstead.total.bugs,
     }
 
+
+
     return metrics
