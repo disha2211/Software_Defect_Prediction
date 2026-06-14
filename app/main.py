@@ -2,6 +2,21 @@ from fastapi import FastAPI,UploadFile,File,HTTPException
 from app.metric_extractor  import extract_metrics
 from app.schemas import  SoftwareMetrics
 from app.predict  import predict_defect
+from app.schemas import CodeRequest
+
+def analyze_source_code(code: str):
+
+    metrics = extract_metrics(code)
+
+    result = predict_defect(metrics)
+
+    return {
+        "prediction": result["prediction"],
+        "probability": result["probability"],
+        "risk_level": result["risk_level"],
+        "metrics": metrics
+    }
+
 
 app = FastAPI(
     title="Software Defect Prediction API"
@@ -58,18 +73,11 @@ async def analyze_file(
 
         code = content.decode("utf-8")
 
-        # Extract Metrics
-        metrics = extract_metrics(code)
-
-        # Predict
-        result = predict_defect(metrics)
+        result = analyze_source_code(code)
 
         return {
             "filename": file.filename,
-            "prediction": result["prediction"],
-            "probability": result["probability"],
-            "risk_level": result["risk_level"],
-            "metrics": metrics
+            **result
         }
 
     except SyntaxError as e:
@@ -91,4 +99,22 @@ async def analyze_file(
         raise HTTPException(
             status_code=500,
             detail=f"Unexpected error: {str(e)}"
+        )
+
+@app.post("/analyze-code")
+async def analyze_code(
+    request: CodeRequest
+):
+
+    try:
+
+        return analyze_source_code(
+            request.code
+        )
+
+    except SyntaxError as e:
+
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid Python syntax: {e}"
         )
