@@ -157,6 +157,15 @@ def display_result(result):
         chart_df
     )
 
+
+    st.divider()
+    
+    st.markdown("## 🤖 AI Code Review")
+    
+    st.markdown(
+    result["ai_review"]
+)
+
     # -----------------------
     # Raw JSON
     # -----------------------
