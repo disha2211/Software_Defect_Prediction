@@ -42,7 +42,16 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file is not None:
 
-    st.success(f"Selected File: {uploaded_file.name}")
+    #--------------Show Uploaded Code
+    if uploaded_file is not None:
+
+        st.success(f"Selected File: {uploaded_file.name}")
+
+        with st.expander("View Uploaded Code"):
+            st.code(
+                uploaded_file.getvalue().decode("utf-8"),
+                language="python"
+            )
 
     if st.button("Predict Defect Risk", use_container_width=True):
 
@@ -87,7 +96,8 @@ if uploaded_file is not None:
 
             st.subheader("Prediction Result")
 
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
+
 
             with col1:
                 st.metric(
@@ -106,6 +116,25 @@ if uploaded_file is not None:
                     label="Risk Level",
                     value=result["risk_level"]
                 )
+
+            with col4:
+                confidence = (
+                        abs(float(result["probability"]) - 0.5)
+                        * 2
+                        * 100
+                )
+
+                st.metric(
+                    "Confidence",
+                    f"{confidence:.2f}%"
+                )
+
+
+            #-----------Color-Coded Prediction Card
+            if result["prediction"] == "Defective":
+                st.error("🚨 Defective File Detected")
+            else:
+                st.success("✅ Non-Defective File")
 
             # =====================================
             # Risk Indicator
@@ -139,11 +168,10 @@ if uploaded_file is not None:
 
             st.divider()
 
+
             # =====================================
             # Metrics Section
             # =====================================
-
-            st.subheader("Extracted Software Metrics")
 
             metrics = result["metrics"]
 
@@ -152,11 +180,36 @@ if uploaded_file is not None:
                 columns=["Metric", "Value"]
             )
 
-            st.dataframe(
-                metrics_df,
-                use_container_width=True,
-                hide_index=True
+            # Keep only numeric metrics
+            metrics_df = metrics_df[
+                pd.to_numeric(
+                    metrics_df["Value"],
+                    errors="coerce"
+                ).notnull()
+            ]
+
+            metrics_df = metrics_df.set_index(
+                "Metric"
             )
+
+            import numpy as np
+
+            st.subheader("Code Metrics Visualization")
+
+            metrics = result["metrics"]
+
+            chart_df = pd.DataFrame(
+                {
+                    "Metric": metrics.keys(),
+                    "Value": metrics.values()
+                }
+            )
+
+            chart_df["Value"] = np.log1p(chart_df["Value"])
+
+            chart_df = chart_df.set_index("Metric")
+
+            st.bar_chart(chart_df)
 
             # =====================================
             # Raw JSON (Optional)
