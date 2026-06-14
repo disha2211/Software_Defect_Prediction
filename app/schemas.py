@@ -1,5 +1,9 @@
 from pydantic import BaseModel
 
+
+class CodeRequest(BaseModel):
+    code: str
+
 class SoftwareMetrics(BaseModel):
 
     LOC_BLANK: float
