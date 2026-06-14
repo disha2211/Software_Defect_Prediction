@@ -15,18 +15,6 @@ def root():
         "Software Defect Prediction API Running"
     }
 
-@app.post("/predict")
-def predict(metrics: SoftwareMetrics):
-
-    prediction, probability = predict_defect(
-        metrics.model_dump()
-    )
-
-    return {
-        "prediction": prediction,
-        "probability": round(probability, 4)
-    }
-
 
 #--------upload endpoint
 @app.post("/analyze-file")
