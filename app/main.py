@@ -80,6 +80,8 @@ async def analyze_file(
         "probability":
             result["probability"],
 
+        "risk_level": result["risk_level"],
+
         "metrics":
             metrics
     }
