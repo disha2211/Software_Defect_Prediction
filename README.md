@@ -1003,4 +1003,4 @@ AI / ML Engineering Portfolio Project
 
 # 📄 License
 
-Add your preferred license here before publishing the repository publicly.
+Distributed under the MIT License. See 'LICENSE' for more information.
