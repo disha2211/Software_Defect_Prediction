@@ -1,20 +1,28 @@
+
 import json
-from urllib import response
-import requests
+import os
+
+from groq import Groq
+
+
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
 
 def ask_llm(prompt: str):
-    response = requests.post(
-        "http://localhost:11434/api/chat",
-        json={
-            "model": "qwen2.5:3b",
-            "messages": [
-                {"role": "user", "content": prompt}
-            ],
-            "stream": False,
-            "options": {"num_predict": 200}
-        }
+    response = client.chat.completions.create(
+        model="openai/gpt-oss-20b",
+        messages=[
+            {
+                "role": "user",
+                "content": prompt
+            }
+        ],
+        max_completion_tokens=300,
+        stream=False
     )
-    return response.json()["message"]["content"]
+
+    return response.choices[0].message.content
+
 
 def analyze_code_with_ai(
     code: str,
@@ -58,6 +66,7 @@ RECOMMENDATIONS:
 RISK_ASSESSMENT:
 <risk explanation>
 """
+
     response = ask_llm(prompt)
-    
+
     return response
